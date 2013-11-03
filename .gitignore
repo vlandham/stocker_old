@@ -1,0 +1,8 @@
+*.swp
+coverage/*
+._*
+.bundle/*
+.yardoc/*
+update/*
+scripts/api_config.pl
+
