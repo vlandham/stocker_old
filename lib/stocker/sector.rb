@@ -1,7 +1,6 @@
 require 'csv'
 require 'open-uri'
 require 'stocker/string_util'
-require 'stocker/industry'
 
 module Stocker
   SECTORS_URL = "http://biz.yahoo.com/p/csv/s_conameu.csv"
@@ -56,6 +55,23 @@ module Stocker
         end
       end
       industries
+    end
+  end
+
+  class Industry
+    def self.from_csv csv_line, sector
+      ind = Industry.new(csv_line["Industry"])
+      ind.sector = sector
+      ind.market_cap = expand_number(csv_line['Market Cap'])
+      ind.p_e = expand_number(csv_line["P/E"])
+      ind
+    end
+
+    attr_accessor :name, :key, :index, :market_cap, :p_e, :div_yield
+    attr_accessor :sector
+    def initialize name
+      self.name = name
+      self.key = to_key(name)
     end
   end
 end
