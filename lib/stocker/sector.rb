@@ -52,7 +52,7 @@ module Stocker
       industries = []
       CSV.new(open(self.industries_url), :headers => true).each do |line|
         if !line["Industry"].strip.empty?
-          industries << Industry.from_csv(line)
+          industries << Industry.from_csv(line, self)
         end
       end
       industries
