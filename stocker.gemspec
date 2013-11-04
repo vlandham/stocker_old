@@ -2,6 +2,7 @@
 require File.expand_path('../lib/stocker', __FILE__)
 
 Gem::Specification.new do |s|
+  s.add_dependency "nokogiri", ""
   s.add_development_dependency "bundler", "~> 1.0"
   s.add_development_dependency "rdoc", "~> 2.5"
   s.add_development_dependency "simplecov", "~> 0.4"
