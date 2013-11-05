@@ -22,4 +22,10 @@ module Stocker
     key = key.strip.gsub(/(\s+|\/)/, "_")
     key
   end
+
+  def clean_whitespace string
+    string = string.strip.gsub("\n", " ")
+    # string = string.gsub(/s+/, " ")
+    string
+  end
 end

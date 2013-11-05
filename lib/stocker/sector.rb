@@ -36,7 +36,7 @@ module Stocker
       self.name = name
       self.key = to_key(name)
       self.index = index
-      self.industries_url = "http://biz.yahoo.com/p/csv/#{index}conameu.csv"
+      self.industries_url = "http://biz.yahoo.com/p/#{index}conameu.html"
       @industries = []
     end
 
@@ -49,16 +49,23 @@ module Stocker
 
     def parse_industries
       industries = []
-      CSV.new(open(self.industries_url), :headers => true).each do |line|
-        if !line["Industry"].strip.empty?
-          industries << Industry.from_csv(line, self)
-        end
+      page = Nokogiri::HTML(open(self.industries_url))
+      rows = page.css("table table tr")
+
+      rows.each_with_index do |row, index|
+        next if index < 3
+        industries << Industry.from_html(row, self)
       end
       industries
+    end
+
+    def print
+      self.industries.collect {|i| i.print}.join("\n")
     end
   end
 
   class Industry
+    # i cannot get the url from the csv file :(
     def self.from_csv csv_line, sector
       ind = Industry.new(csv_line["Industry"])
       ind.sector = sector
@@ -67,11 +74,47 @@ module Stocker
       ind
     end
 
-    attr_accessor :name, :key, :index, :market_cap, :p_e, :div_yield
-    attr_accessor :sector
+    def self.from_html row, sector
+      ind = Industry.new(row.css('td a')[0].text)
+      ind.url = "http://biz.yahoo.com/p/" + row.css('td a')[0]['href']
+      ind.sector = sector
+      ind.market_cap = expand_number(row.css("td")[2].text)
+      ind.p_e = expand_number(row.css("td")[3].text)
+      ind.div_yield = expand_number(row.css("td")[5].text)
+      ind
+    end
+
+    attr_accessor :name, :key, :url, :index, :market_cap, :p_e, :div_yield
+    attr_accessor :sector, :sector_name
     def initialize name
-      self.name = name
+      self.name = clean_whitespace(name)
       self.key = to_key(name)
+      @symbols = []
+    end
+
+    def print
+      [self.name, self.key, self.sector.name, self.market_cap].join("\t")
+    end
+
+    def symbols
+      if @symbols.empty?
+        @symbols = parse_symbols self.url
+      end
+      @symbols
+    end
+
+    def parse_symbols url
+      symbols = []
+      if self.url
+        page = Nokogiri::HTML(open(url))
+        hrefs = page.css("a").collect {|a| a['href']}
+        hrefs.each do |href|
+          if href =~ /q\?s=(\S+)&/
+            symbols << $1
+          end
+        end
+      end
+      symbols
     end
   end
 end
